@@ -1,0 +1,377 @@
+//*************************************************
+// Five in a row 		
+// by Taranjyot Singh
+// 
+//*************************************************
+import java.util.*;
+import java.lang.*;
+import javax.swing.*; //needed to make pop-up warning to player
+class FiveInARow
+{
+
+  	static final int EMPTY=0;
+ 	static final int BLACK = 1;
+  	 static final int WHITE=2;
+  			// the different states of the game
+ 	static final int PLAYING=0;
+ 	 static final int DRAW = 1;
+  	 static final int BLACK_WON = 2;
+ 	static final int WHITE_WON=3;
+			// gameboard
+  static final int BOARD_SIZE=8;  //this is where you can change the parameters
+  static final int NUMBER_IN_A_ROW=5; //this is where you can change the parameters
+   	static char[][] board=new char [BOARD_SIZE][BOARD_SIZE];
+  	static Square square = new Square();
+
+static int currentState, // used to store value telling us if game is still going on or finished
+currentPlayer,  // used to tell us which player is playing
+numPlayer, // used to select who/how many will play: computer, human, both
+checkBlack, // used for human to choose if they will be white or black player 
+countSquare, //used to count total moves ( 64 is the max if it is an 8x8 board)
+turnnum, // used to start the game for the computer from the middle of the board
+	prevRow, // used to store row of previous move of computer 
+	prevCol, // used to store column address of previous move of computer
+	previousRow, // used to store row of previous move of player 
+	previousColumn; // used to store column address of previous move of player
+    static int block=0; //used to block opponent from winning the game
+   static Scanner keyboard=new Scanner(System.in);
+  
+   public static void main(String[] args) 
+   {
+     System.out.println("\nPress \t1 for two human players \n\t2 for one human" +
+                                  " to play with computer (\3computer\3 will try to win!)"+
+                                  " \n\t3 to watch the computer play both"+ 		
+                                   " Black and White.\n");
+       numPlayer=keyboard.nextInt();
+       if(numPlayer==2)
+        {
+         System .out.println("\tPress 1 to play Black,  or \n\t2 to play White\n");
+         checkBlack=keyboard.nextInt(); 
+       
+         }       
+        initGame();
+        
+      do
+         {
+             
+            getMove(currentPlayer, square);
+            updateGame(currentPlayer, square, board);  //isLegal & makeMove are inside updateGame
+            display(board);
+            alert();
+             if (currentState==BLACK_WON)
+                System.out.println("Black has won! Black has won! Black has won!");
+             else if(currentState==WHITE_WON)
+                {
+                if(numPlayer==1  || checkBlack ==2 || numPlayer==3)
+                System.out.println("White has won! White has won! White has won!");
+                else
+                System.out.println("Computer has won! Computer has won! Computer has won!");
+                 }
+            
+             if(currentState==DRAW)
+                System.out.println("It is a Draw.");
+             
+             currentPlayer=(currentPlayer==BLACK)?WHITE:BLACK;
+             turnnum++;
+          }
+        while(currentState==PLAYING);
+      } // end of main    
+     static void initGame() 
+      {
+         for(int row=0; row<BOARD_SIZE; row++)
+              for(int col=0; col<BOARD_SIZE; col++)
+                    board[row][col]=EMPTY;
+              
+         
+
+        currentState=PLAYING;    
+        currentPlayer=BLACK;
+        turnnum=0;
+        countSquare=0;
+       }  
+      static void getMove(int player, Square square) 
+        {
+           boolean flag; //to store the return value of isLegal method to make decisions from it
+                                  // isLegal tells us if it is okay to move to that square
+              
+          do
+          {
+             if (player==BLACK )
+             {
+                if(checkBlack==1 || numPlayer==1)
+                 //warn player black when they are one move away from losing the game
+                {
+                System.out.println("Player Black, enter your move: row #,");
+                System.out.println("then Enter, then give column #, then Enter");
+                System.out.println(" \t\t\t(or type $ to quit playing) ");
+                square.color='b';
+               String dollar=keyboard.next();
+               dollarCheck(dollar);
+                 }
+                else if(numPlayer==3 || numPlayer==2)
+                 computerMove('b');
+                
+              }
+             else if(numPlayer==1 || checkBlack ==2)
+               
+                	   {
+            	         System.out.println("Player White, enter your move: row #, ");
+                          System.out.println("then Enter, then enter column #, then Enter");
+                          System.out.println("\t\t\t( or type $ to quit playing) ");
+                          square.color='w';
+                          String dollar=keyboard.next();
+                          dollarCheck(dollar);  
+                       }
+             else
+             computerMove('w');
+           
+          flag =isLegal(board, player, square);
+                if (flag)
+                makeMove(board, square);    
+                  else
+                    System.out.println("Invalid move - Try Again\n");
+                }
+              while(!flag);
+ 
+          }
+           static boolean isLegal(char[][] board, int player, Square square)
+             {
+                   return (square.row >= 0 && square.row < BOARD_SIZE && square.column >=
+                   0 && square.column< BOARD_SIZE && board[square.row][square.column]==EMPTY);
+                }
+    
+  static void computerMove(char color) 
+                { // open method computerMove
+                System.out.println("To make next Computer Move: Press Enter");
+                System.out.println(" \t\t\t(or type $ to quit playing) ");
+                String Enter=keyboard.nextLine();
+                if(Enter.equals("$"))
+                     System.exit(0);  
+
+                square.color=color;
+                 switch(block)
+                   {
+                     case 0:
+                     
+                
+               if(numPlayer==2)
+               {
+                if(turnnum==0)
+                 {
+                   square.row=BOARD_SIZE/2;
+                  square.column=BOARD_SIZE/2;
+                  }
+                   else
+                      {       
+                           int[]  dirx={1,0,1,1};
+                           int[]  diry={0,1,1,-1};
+                            int i=0,r,c;
+                            
+	      do
+                              {
+                                r=prevRow; c=prevCol;
+                                r=prevRow+dirx[i];
+                                c=prevCol+diry[i];
+                                i++;
+                               }
+                             while(  i<4 && r>=0 && c>=0 && r<BOARD_SIZE && r<BOARD_SIZE && !(board[r][c]==EMPTY) );
+                             square.row=r;
+                             square.column=c;
+                          }
+                     
+                  prevRow=square.row;
+                  prevCol=square.column; 
+             
+                 }
+                else
+               {
+                Random randomGenerator = new Random();
+                do
+                {
+                 square.row=randomGenerator.nextInt(BOARD_SIZE);
+                square.column=randomGenerator.nextInt(BOARD_SIZE);
+                  }
+                 
+                while( !(board[square.row][square.column]==EMPTY));
+                   }
+                
+              break;
+              case 1:
+               square.row=previousRow+1;
+               square.column=previousColumn;
+               break;
+              case 2:
+               square.row=previousRow;
+               square.column=previousColumn+1;
+               break;
+              case 3:
+                square.row=previousRow+1;
+                square.column=previousColumn+1;
+                break;
+               case 4:
+                 square.row=previousRow-1;
+                 square.column=previousColumn+1;
+               break;
+               }
+               block=0;
+             }      
+
+  static void dollarCheck(String dollar)
+          {
+             if (dollar.equals("$"))
+                    System.exit(0);
+                    else
+                      {
+                         int notDollar = Integer.parseInt(dollar);
+                         square.row = notDollar-1;
+                         square.column=keyboard.nextInt()-1;
+                         previousRow = square.row;
+                         previousColumn=square.column;
+                       }
+             }
+            
+  static void makeMove(char[][] board, Square square)
+            {
+               board[square.row][square.column] = square.color;
+               countSquare++;
+             }
+  static void updateGame(int player, Square square, char [][]board)
+            {
+         
+        int row = square.row;
+            int  col = square.column;
+                if(hasWon(board, player))
+                currentState=(player==BLACK)? BLACK_WON:WHITE_WON;
+                if (draw())
+                currentState=DRAW;
+              }
+        
+  static boolean hasWon(char[][] board, int player)
+           {        
+             return(count( player, 1, 0 ) >= NUMBER_IN_A_ROW ||
+            
+             count( player, 0, 1 ) >= NUMBER_IN_A_ROW ||
+      
+            count( player, 1, -1 ) >= NUMBER_IN_A_ROW ||
+          
+            count( player, 1, 1 ) >= NUMBER_IN_A_ROW);  
+       }  
+
+   static void alert()
+            {
+              int player = currentPlayer;
+              if(count(player, 1,0) == NUMBER_IN_A_ROW-1||count( player, 0, 1 ) == NUMBER_IN_A_ROW-1 ||count( player, 1, -1 ) == NUMBER_IN_A_ROW-1 ||count( player, 1, 1 ) == NUMBER_IN_A_ROW-1)
+             JOptionPane.showMessageDialog(null, " ALERT ! Opponent is one move away from winning the game! ");
+             if(count(player, 1,0) == NUMBER_IN_A_ROW-2)
+                 {
+                   block=1;
+                   
+                  }
+            else if(count( player, 0, 1 ) == NUMBER_IN_A_ROW-2)
+                  {
+                     block=2;
+                    
+                   }
+            else if(count( player, 1, -1 ) == NUMBER_IN_A_ROW-2)
+                  {
+                     block=3;
+                    
+                   }   
+             else if(count( player, 1, 1 ) == NUMBER_IN_A_ROW-2) 
+                  {
+                     block=4;
+                   
+                   }
+             
+       }  
+	   
+       static int count(int player, int dirX, int dirY) 
+           {
+                 int ct = 1;  // sum of pieces in a row belonging to the player.
+                 int r, c;    // A row and column to be examined for possible move
+                 r = square.row + dirX;  // Look at square that is one down 
+                 c = square.column + dirY; //look at column to the right
+                 while ( r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] == square.color ) 
+                     {
+                           ct++;
+                           r += dirX;  // look at square that is next one down
+                           c += dirY; //  look at column that is next one to the right
+                        }          
+                   r = square.row - dirX;  // look at square that is one up
+                   c = square.column - dirY; //look at column that is one to the left
+                  while ( r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] == square.color ) 
+                      {
+                            ct++;
+                             r -= dirX;   //look at square that is next one up
+                             c -= dirY;   // look at column that is next one to the left
+                       } 
+                  return ct;
+         
+        
+       }  // end count()
+
+
+static boolean draw()
+
+     {
+       return(countSquare==(BOARD_SIZE*BOARD_SIZE));
+      
+      }
+
+static void display(char[][] board)
+      {
+           int size;
+          for(int i=0; i<BOARD_SIZE; i++)
+        {
+           size=0;
+           while(size<BOARD_SIZE)
+           {
+             if(size<BOARD_SIZE-1)
+               System.out.print("*******");
+            else
+                System.out.print("******");
+            size++;
+            }
+            System.out.println("");
+        
+           for(int j=0; j<BOARD_SIZE; j++)
+            {
+                System.out.print(board[i][j]);
+                 if (j<BOARD_SIZE-1)
+             System.out.print("     |");
+
+                 }
+                  System.out.print("    |"); 
+            
+          System.out.println();  
+         }
+           size=0;
+          while(size<BOARD_SIZE)
+           {
+            if(size<BOARD_SIZE-1)
+               System.out.print("*******");
+            else
+            System.out.print("******");
+            size++;
+            }
+            System.out.println("");
+            
+     }    
+   
+       
+ }
+   class Square
+   { 
+       char color;
+       int row;
+       int column;
+    }       
+
+                 
+             
+
+
+
+
+         
+    
